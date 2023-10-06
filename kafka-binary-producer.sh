@@ -136,7 +136,7 @@ if [[ $DRYRUN == "TRUE" ]]; then
   echo "Built only: ${f_json}"
 else
   echo "Producing: ${f_json}"
-  cat ${f_json} | kafka-console-producer --bootstrap-server ${BOOTSTRAP_SERVER} ${PRODUCER_CONFIG} --topic ${TOPIC}
+  cat ${f_json} | kafka-console-producer --bootstrap-server ${BOOTSTRAP_SERVER} ${PRODUCER_CONFIG} --property compression.type=gzip --topic ${TOPIC}
 fi
 
 cd $PWD
