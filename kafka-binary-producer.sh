@@ -1,7 +1,8 @@
 #!/bin/bash
 
 function usage {
-  echo "TODO"
+  echo "Example:"
+  echo "kafka-binary-producer.sh --bootstrap-server big-host-1.datadisorder.dev:9095 --topic binary_in_parts --filepath ~/Downloads/tso.png"}
 }
 
 # deletes the temp directory
@@ -112,9 +113,8 @@ echo "Temp Directory    = ${TMPDIR}"
 
 
 echo "Start processing: ${FILE}"
-
 cd $TMPDIR
-split -b 512k -d ${FILEPATH} ${FILE}_
+split -b 512k -a 6 -d ${FILEPATH} ${FILE}_
 file_md5sum=($(md5sum ${FILEPATH}))
 numParts=$(ls ${FILE}_* | wc -l | xargs)
 f_json=$FILE.json
