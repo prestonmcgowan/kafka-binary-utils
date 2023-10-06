@@ -131,8 +131,8 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    --from-earliest)
-      FROM_EARLIEST="--from-earliest"
+    --from-beginning)
+      FROM_BEGINNING="--from-beginning"
       shift # past argument
       ;;
     --skip-consumer)
@@ -207,7 +207,7 @@ if [[ $SKIP_CONSUMER != "TRUE" ]]; then
 
   rm ${WORKINGFILE}
   echo "Starting Consumer"
-  kafka-console-consumer --bootstrap-server ${BOOTSTRAP_SERVER} --topic ${TOPIC} --timeout-ms ${TIMEOUT_MS} --group ${GROUP} --max-messages ${MAX_MESSAGES} ${FROM_EARLIEST} > ${WORKINGFILE}
+  kafka-console-consumer --bootstrap-server ${BOOTSTRAP_SERVER} --topic ${TOPIC} --timeout-ms ${TIMEOUT_MS} --group ${GROUP} --max-messages ${MAX_MESSAGES} ${FROM_BEGINNING} > ${WORKINGFILE}
   echo "Finished Consuming"
   NUMBIN=$(cat ${WORKINGFILE} | wc -l | xargs)
 
