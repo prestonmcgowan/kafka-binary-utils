@@ -32,6 +32,7 @@ fi
 
 POSITIONAL_ARGS=()
 DRYRUN=FALSE
+BYTE_COUNT="512k"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -52,6 +53,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     -f|--filepath)
       FILEPATH="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -b)
+      BYTE_COUNT="$2"
       shift # past argument
       shift # past value
       ;;
@@ -114,7 +120,7 @@ echo "Temp Directory    = ${TMPDIR}"
 
 echo "Start processing: ${FILE}"
 cd $TMPDIR
-split -b 512k -a 6 -d ${FILEPATH} ${FILE}_
+split -b ${BYTE_COUNT} -a 6 -d ${FILEPATH} ${FILE}_
 file_md5sum=($(md5sum ${FILEPATH}))
 numParts=$(ls ${FILE}_* | wc -l | xargs)
 f_json=$FILE.json
