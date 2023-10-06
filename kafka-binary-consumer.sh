@@ -2,8 +2,9 @@
 
 function usage {
   echo "Example:"
-  echo "kafka-binary-consumer.sh --bootstrap-server big-host-1.datadisorder.dev:9095 --topic binary_in_parts --group binary-consumer --max-messages 5 --timeout-ms 30000 -d tmp/binarie
-s -w tmp/binary-in-progress"
+  echo "kafka-binary-consumer.sh --bootstrap-server big-host-1.datadisorder.dev:9095 --topic binary_in_parts --group binary-consumer --max-messages 5 --timeout-ms 30000 -d tmp/binaries -w tmp/binary-in-progress"
+  echo "kafka-binary-consumer.sh --bootstrap-server big-host-1.datadisorder.dev:9095 --topic binary_in_parts --group binary-consumer --max-messages 100 --timeout-ms 10000 -d tmp/binaries -w tmp/binary-in-progress --skip-consumer"
+  echo "kafka-binary-consumer.sh --bootstrap-server big-host-1.datadisorder.dev:9095 --topic binary_in_parts --group binary-consumer --max-messages 100 --timeout-ms 10000 -d tmp/binaries -w tmp/binary-in-progress --skip-processing"
 }
 
 function loadPartFile {
@@ -18,9 +19,7 @@ function loadPartFile {
   do
     csv=$(echo $line | sed -e 's/{//;s/\}//;s/\"//g')
     IFS=',' read -r -a array <<< "$csv"
-  #   echo "a: ${array}"
-  #   echo "a0: ${array[0]}"
-  #   echo "a1: ${array[1]}"
+
     for index in "${!array[@]}"
     do
       kvp="${array[index]}"
@@ -87,8 +86,8 @@ fi
 
 
 POSITIONAL_ARGS=()
-DRYRUN="FALSE"
 SKIP_CONSUMER="FALSE"
+SKIP_PROCESSING="FALSE"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -140,8 +139,8 @@ while [[ $# -gt 0 ]]; do
       SKIP_CONSUMER=TRUE
       shift
       ;;
-    --dry-run)
-      DRYRUN=TRUE
+    --skip-processing)
+      SKIP_PROCESSING=TRUE
       shift
       ;;
     -v|--verbose)
@@ -196,8 +195,8 @@ echo "Binary Directory  = ${BINDIR}"
 echo "Working Directory = ${WORKINGDIR}"
 echo "Max Messages      = ${MAX_MESSAGES}"
 echo "Message Timeout   = ${TIMEOUT_MS}"
-echo "Dry Run           = ${DRYRUN}"
 echo "Skip Consumer     = ${SKIP_CONSUMER}"
+echo "Skip Processing   = ${SKIP_PROCESSING}"
 echo " ----------= Environmental =----------"
 echo "base64 options    = ${B64_OPTS}"
 
@@ -223,41 +222,45 @@ else
   echo "Skipped Kafka Consumer"
 fi
 
-echo "Build completed binary from parts"
-for md in ${WORKINGDIR}/metadata_*; 
-do
-  echo "Metadata: $md"
-  metadata=$(cat $md)
-  filename=$(echo $metadata | cut -f1 -d,)
-  file_md5sum=$(echo $metadata | cut -f2 -d,)
-  numParts=$(echo $metadata | cut -f3 -d,)
-  echo "filename: ${filename}" 
-  echo "file_md5sum: ${file_md5sum}"
-  echo "file_parts:  ${numParts}"
+if [[ $SKIP_PROCESSING != "TRUE" ]]; then
+  echo "Build completed binary from parts"
+  for md in ${WORKINGDIR}/metadata_*; 
+  do
+    echo "Metadata: $md"
+    metadata=$(cat $md)
+    filename=$(echo $metadata | cut -f1 -d,)
+    file_md5sum=$(echo $metadata | cut -f2 -d,)
+    numParts=$(echo $metadata | cut -f3 -d,)
+    echo "filename: ${filename}" 
+    echo "file_md5sum: ${file_md5sum}"
+    echo "file_parts:  ${numParts}"
 
-  partsFound=$(ls ${WORKINGDIR}/${filename}_* | wc -l)
-  echo "Found ${partsFound} of ${numParts} for ${filename}"
-  if [[ $partsFound -eq $numParts ]]; then
-    echo "Found all parts for ${filename}, rebuild binary"
-    
-    DECODED=${WORKINGDIR}/${filename}.decoded
-    if [[ -f ${DECODED} ]]; then 
-      rm ${DECODED}
-    fi
+    partsFound=$(ls ${WORKINGDIR}/${filename}_* | wc -l)
+    echo "Found ${partsFound} of ${numParts} for ${filename}"
+    if [[ $partsFound -eq $numParts ]]; then
+      echo "Found all parts for ${filename}, rebuild binary"
+      
+      DECODED=${WORKINGDIR}/${filename}.decoded
+      if [[ -f ${DECODED} ]]; then 
+        rm ${DECODED}
+      fi
 
-    for encoded in ${WORKINGDIR}/${filename}_*; do
-      echo "Processing: ${encoded}"
-      base64 $B64_OPTS ${encoded} >> ${DECODED}
-    done
-    
-    binSum=($(md5sum ${DECODED}))
-    if [[ ${binSum} == ${file_md5sum} ]]; then
-      echo "MD5Sum match for ${filename}"
-      mv ${DECODED} ${BINDIR}/${filename}
-      echo "Rebuilt ${BINDIR}/${filename}"
-      rm ${WORKINGDIR}/$filename* ${md}
-    else
-      echo "MD5Sum does not match match for ${filename}"
+      for encoded in ${WORKINGDIR}/${filename}_*; do
+        echo "Processing: ${encoded}"
+        base64 $B64_OPTS ${encoded} >> ${DECODED}
+      done
+      
+      binSum=($(md5sum ${DECODED}))
+      if [[ ${binSum} == ${file_md5sum} ]]; then
+        echo "MD5Sum match for ${filename}"
+        mv ${DECODED} ${BINDIR}/${filename}
+        echo "Rebuilt ${BINDIR}/${filename}"
+        rm ${WORKINGDIR}/$filename* ${md}
+      else
+        echo "MD5Sum does not match match for ${filename}"
+      fi
     fi
-  fi
-done
+  done
+else
+  echo "Skipped post processing"
+fi
