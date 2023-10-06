@@ -7,6 +7,10 @@ I work on several secured systems and require FIPS controls and many internet av
 I have the need to move binary files from one network to another and maybe across other disconnected environments where a SFTP or TCP session would fail.
 Utilizing Kafka as a transmission and dissemination mechanism allows for a greater delivery, routing, and recovery than SFTP or S3 where the network access are not approved.
 
+If you have S3 access, I recommend you take a look at the Claim Check Pattern.
+* [Claim Check pattern example in Scala](https://github.com/ksilin/claimcheck)
+* [Handling Large Messages with Apache Kafka (CSV, XML, Image, Video, Audio, Files](https://www.kai-waehner.de/blog/2020/08/07/apache-kafka-handling-large-messages-and-files-for-image-video-audio-processing/)
+
 ## How does this work?
 
 ### kafka-binary-producer
