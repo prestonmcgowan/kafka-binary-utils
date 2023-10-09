@@ -32,15 +32,13 @@ The `kafka-binary-producer` makes use of several well known scripting tricks to 
 
 #### Examples
 
-U
-pload the identified file to Kafka. (default 512k split pieces)
+Upload the identified file to Kafka. (default 512k split pieces)
  ```shell
  kafka-binary-producer.sh --bootstrap-server fqdn:9095 \
   or --topic binary_in_parts --filepath /data/isos/centos.iso
  ```
 
-U
-pload the identified file to Kafka and use 100k split pieces.
+Upload the identified file to Kafka and use 100k split pieces.
  ```shell
  ./kafka-binary-producer.sh --bootstrap-server fqdn:9095 \
   or --topic binary_in_parts --filepath ~/Downloads/something.png \
