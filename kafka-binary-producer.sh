@@ -130,7 +130,7 @@ f_json=$FILE.json
 f_b64=$FILE.b64
 for f in ${FILE}_*; do
   
-  base64 $B64_OPTS ${f} | sed "s/*[ \w]$//" > ${f_b64}
+  base64 $B64_OPTS ${f} | tr -d '\n' > ${f_b64}
   part_md5sum=($(md5sum ${f_b64}))
   part_num=$(echo $f | sed -n "s/.*_\(.*\)\$/\1/p")
   

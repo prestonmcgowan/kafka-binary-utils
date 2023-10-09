@@ -26,7 +26,7 @@ function loadPartFile {
       key=$(echo $kvp | cut -f1 -d:)
       if [[ $key == 'part_base64_contents' ]]; then
         # Linux throws an error with xargs that the file is too long
-        value=$(echo $kvp | cut -f2 -d: | sed "s/^[ \w]*//" | sed "s/*[ \w]$//" )
+        value=$(echo $kvp | cut -f2 -d: | sed "s/^ *//" )
       else
         value=$(echo $kvp | cut -f2 -d:| xargs)
       fi
@@ -110,6 +110,7 @@ fi
 POSITIONAL_ARGS=()
 SKIP_CONSUMER="FALSE"
 SKIP_PROCESSING="FALSE"
+DEBUG="FALSE"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -163,6 +164,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-processing)
       SKIP_PROCESSING=TRUE
+      shift
+      ;;
+    --debug)
+      DEBUG=TRUE
       shift
       ;;
     -v|--verbose)
@@ -219,6 +224,7 @@ echo "Max Messages      = ${MAX_MESSAGES}"
 echo "Message Timeout   = ${TIMEOUT_MS}"
 echo "Skip Consumer     = ${SKIP_CONSUMER}"
 echo "Skip Processing   = ${SKIP_PROCESSING}"
+echo "Debug             = ${DEBUG}"
 echo " ----------= Environmental =----------"
 echo "base64 options    = ${B64_OPTS}"
 
@@ -243,7 +249,7 @@ if [[ $SKIP_CONSUMER != "TRUE" ]]; then
     echo "Finished processing parts"
   fi
 
-  if [[ -f "$WORKINGDIR" ]]; then
+  if [[ -f "$WORKINGFILE" && $DEBUG == "FALSE" ]]; then
     rm ${WORKINGFILE}
   fi
 else
