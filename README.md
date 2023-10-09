@@ -32,18 +32,16 @@ The `kafka-binary-producer` makes use of several well known scripting tricks to 
 
 #### Examples
 
-U
-pload the identified file to Kafka. (default 512k split pieces)
+Upload the identified file to Kafka. (default 512k split pieces)
  ```shell
  kafka-binary-producer.sh --bootstrap-server fqdn:9095 \
-  or --topic binary_in_parts --filepath /data/isos/centos.iso
+ --topic binary_in_parts --filepath /data/isos/centos.iso
  ```
 
-U
-pload the identified file to Kafka and use 100k split pieces.
+Upload the identified file to Kafka and use 100k split pieces.
  ```shell
  ./kafka-binary-producer.sh --bootstrap-server fqdn:9095 \
-  or --topic binary_in_parts --filepath ~/Downloads/something.png \
+  --topic binary_in_parts --filepath ~/Downloads/something.png \
    -b 100k
  ```
 
@@ -75,7 +73,7 @@ The `kafka-binary-consumer` pulls all the batches of documents off the Kafka Top
 Consume from Kafka Topic `binary_in_parts` in batches of 50 and only way for 10 seconds to start processing.
 ```shell
 kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
- or --group binary-consumer --max-messages 50 --timeout-ms 10000 \
+ --group binary-consumer --max-messages 50 --timeout-ms 10000 \
   -d tmp/binaries -w tmp/binary-in-progress 
 ```
 
@@ -83,7 +81,7 @@ kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
 Consume from Kafka Topic `binary_in_parts` in batches of 200 and only way for 10 seconds to start processing.
 ```shell
 kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
- or --group binary-consumer --max-messages 200 --timeout-ms 10000 \
+ --group binary-consumer --max-messages 200 --timeout-ms 10000 \
   -d tmp/binaries -w tmp/binary-in-progress 
 ```
 
@@ -91,7 +89,7 @@ kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
 Consume from Kafka Topic `binary_in_parts` in batches of 500 and only way for 10 seconds to start processing.
 ```shell
 kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
- or --group binary-consumer --max-messages 500 --timeout-ms 10000 \
+ --group binary-consumer --max-messages 500 --timeout-ms 10000 \
   -d tmp/binaries -w tmp/binary-in-progress 
 ```
 
@@ -99,7 +97,7 @@ kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
 Consume from Kafka Topic `binary_in_parts` in batches of 100 and only way for 30 seconds to start processing.
 ```shell
 kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
- or --group binary-consumer --max-messages 100 --timeout-ms 30000 \
+ --group binary-consumer --max-messages 100 --timeout-ms 30000 \
   -d tmp/binaries -w tmp/binary-in-progress 
 ```
 
@@ -107,9 +105,9 @@ kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
 Skip consuming from Kafka Topic and just start processing.
 ```shell
 kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
- or --group binary-consumer --max-messages 100 --timeout-ms 10000 \
+ --group binary-consumer --max-messages 100 --timeout-ms 10000 \
   -d tmp/binaries -w tmp/binary-in-progress \
- or --skip-consumer
+ --skip-consumer
 ```
 
 Consume from Kafka Topic and just skip processing.
@@ -117,18 +115,18 @@ Consume from Kafka Topic and just skip processing.
 
 ```shell
 kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
- or --group binary-consumer --max-messages 100 --timeout-ms 10000 \
+ --group binary-consumer --max-messages 100 --timeout-ms 10000 \
   -d tmp/binaries -w tmp/binary-in-progress \
- or --skip-processing
+ --skip-processing
 ```
 
 
-Skip consumption and processing. Not sure why, but you could  ¯\_(ツ)_/¯
+Skip consumption and processing. Not sure why, but you could 
 ```shell
 kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
- or --group binary-consumer --max-messages 100 --timeout-ms 10000 \
+ --group binary-consumer --max-messages 100 --timeout-ms 10000 \
   -d tmp/binaries -w tmp/binary-in-progress \
- or --skip-processing --skip-consumer
+ --skip-processing --skip-consumer
 ```
 
 ## Sample Message on Kafka
