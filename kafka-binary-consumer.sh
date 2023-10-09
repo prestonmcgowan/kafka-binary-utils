@@ -24,7 +24,6 @@ function loadPartFile {
     do
       kvp="${array[index]}"
       key=$(echo $kvp | cut -f1 -d:)
-      echo "Key: $key"
       if [[ $key == 'part_base64_contents' ]]; then
         # Linux throws an error with xargs that the file is too long
         value=$(echo $kvp | cut -f2 -d: | sed "s/^[ \w]*//" | sed "s/*[ \w]$//" )
@@ -32,30 +31,38 @@ function loadPartFile {
         value=$(echo $kvp | cut -f2 -d:| xargs)
       fi
       case $key in 
-          filename)
-              filename=$value
-              ;;
-          file_md5sum)
-              file_md5sum=$value
-              ;;
-          file_parts)
-              numParts=$value
-              ;;
-          partname)
-              partFilename=$value
-              ;;
-          part_base64_contents)
-              part_base64_contents=$value
-              ;;
+        filename)
+          filename=$value
+          ;;
+        file_md5sum)
+          file_md5sum=$value
+          ;;
+        file_parts)
+          numParts=$value
+          ;;
+        partname)
+          partFilename=$value
+          ;;
+        part_md5sum)
+          part_md5sum=$value
+          ;;
+        part_num)
+          part_num=$value
+          ;;
+        part_base64_contents)
+          part_base64_contents=$value
+          ;;
       esac
     done
     
     echo "------------------------------------"
-    echo "Processing : ${fileToProcess}"
-    echo "filename   : ${filename}" 
-    echo "file_md5sum: ${file_md5sum}"
-    echo "file_parts : ${numParts}"
-    echo "partname   : ${partFilename}"
+    echo "Processing  : ${fileToProcess}"
+    echo "filename    : ${filename}" 
+    echo "file_md5sum : ${file_md5sum}"
+    echo "file_parts  : ${numParts}"
+    echo "partname    : ${partFilename}"
+    echo "part_md5sum : ${part_md5sum}"
+    echo "part_num    : ${part_num}"
     echo "part_base64_contents Length: ${#part_base64_contents}"
     echo "------------------------------------"
 
@@ -63,7 +70,13 @@ function loadPartFile {
     metadataFilename="${WORKINGDIR}/metadata_${file_md5sum}"
     echo "MetadataFilename: ${metadataFilename}"
     if [[ ! -f "${metadataFilename}" ]]; then
-      echo "$filename,$file_md5sum,$numParts" > ${metadataFilename}
+      echo "${filename},${file_md5sum},${numParts}" > ${metadataFilename}
+    fi
+    partMetadataFilename="${WORKINGDIR}/part_${part_num}_metadata_${file_md5sum}"
+    echo "PartMetadataFilename: ${partMetadataFilename}"
+    if [[ ! -f "${partMetadataFilename}" ]]; then
+      # The formatting here with MD5SUM_2Spaces_Filename is to match the output of md5sum
+      echo "${part_md5sum}  ${partFilename}" > ${partMetadataFilename}
     fi
 
     # Write out this parts data

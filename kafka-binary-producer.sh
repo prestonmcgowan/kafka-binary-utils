@@ -127,23 +127,32 @@ split -b ${BYTE_COUNT} -a 6 -d ${FILEPATH} ${FILE}_
 file_md5sum=($(md5sum ${FILEPATH}))
 numParts=$(ls ${FILE}_* | wc -l | xargs)
 f_json=$FILE.json
+f_b64=$FILE.b64
 for f in ${FILE}_*; do
+  
+  base64 $B64_OPTS ${f} | sed "s/*[ \w]$//" > ${f_b64}
+  part_md5sum=($(md5sum ${f_b64}))
+  part_num=$(echo $f | sed -n "s/.*_\(.*\)\$/\1/p")
+  
+
   echo -n "{" >> ${f_json}
+  if [[ $JSON_ISH_METADATA ]]; then
+    echo "TODO: echo -n $JSON_ISH_METADATA >> ${f_json} "
+    echo "TODO: echo -n \",\""
+  fi
   echo -n "\"filename\": \"${FILE}\"," >> ${f_json}
   echo -n "\"file_md5sum\": \"${file_md5sum}\"," >> ${f_json}
   echo -n "\"file_parts\": ${numParts}," >> ${f_json}
   echo -n "\"partname\": \"${f}\"," >> ${f_json}
+  echo -n "\"part_md5sum\": \"${part_md5sum}\"," >> ${f_json}
+  echo -n "\"part_num\": \"${part_num}\"," >> ${f_json}
   echo -n "\"part_base64_contents\": \"" >> ${f_json}
-  base64 $B64_OPTS ${f} | sed "s/*[ \w]$//" >> ${f_json}
+  cat ${f_b64} >> ${f_json}
   echo -n "\"" >> ${f_json}
   echo -n "}" >> ${f_json}
   echo >> ${f_json}
 
-  if [[ $DRYRUN == "TRUE" ]]; then
-    f_b64=$f.b64
-    base64 $B64_OPTS ${f} | sed "s/*[ \w]$//" > "${f}.b64"
-    md5sum "${f}.b64" > "${f}.b64.md5"
-  fi
+
 done
 
 if [[ $DRYRUN == "TRUE" ]]; then
