@@ -24,7 +24,13 @@ function loadPartFile {
     do
       kvp="${array[index]}"
       key=$(echo $kvp | cut -f1 -d:)
-      value=$(echo $kvp | cut -f2 -d: | xargs)
+      echo "Key: $key"
+      if [[ $key == 'part_base64_contents' ]]; then
+        # Linux throws an error with xargs that the file is too long
+        value=$(echo $kvp | cut -f2 -d: | sed "s/^[ \w]*//" | sed "s/*[ \w]$//" )
+      else
+        value=$(echo $kvp | cut -f2 -d:| xargs)
+      fi
       case $key in 
           filename)
               filename=$value
@@ -77,6 +83,9 @@ elif [[ $DISTRO == *"Darwin"* ]]; then
   echo "MacOS Detected"
   B64_OPTS="-d -i"
   ## TODO: Check for mac md5sum. `brew install md5sha1sum`
+elif [[ $(cat /etc/redhat-release) == *"Red Hat"* ]]; then
+  echo "Red Hat Detected"
+  B64_OPTS="-d"
 else
   echo "Other OS Detected"
   echo "Only MacOS & Ubuntu are supported at this time"
@@ -122,12 +131,12 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       ;;
     -d|--binary-directory)
-      BINDIR="$2"
+      BINDIR=$(realpath $2)
       shift # past argument
       shift # past value
       ;;
     -w|--working-directory)
-      WORKINGDIR="$2"
+      WORKINGDIR=$(realpath $2)
       shift # past argument
       shift # past value
       ;;
@@ -205,7 +214,9 @@ if [[ $SKIP_CONSUMER != "TRUE" ]]; then
   WORKINGFILENAME="binary-consumer.data"
   WORKINGFILE=${WORKINGDIR}/${WORKINGFILENAME}
 
-  rm ${WORKINGFILE}
+  if [[ -f "$WORKINGDIR" ]]; then
+    rm ${WORKINGFILE}
+  fi
   echo "Starting Consumer"
   kafka-console-consumer --bootstrap-server ${BOOTSTRAP_SERVER} --topic ${TOPIC} --timeout-ms ${TIMEOUT_MS} --group ${GROUP} --max-messages ${MAX_MESSAGES} ${FROM_BEGINNING} > ${WORKINGFILE}
   echo "Finished Consuming"
@@ -217,6 +228,10 @@ if [[ $SKIP_CONSUMER != "TRUE" ]]; then
     echo "Start Processing ${NUMBIN} parts..."
     loadPartFile $WORKINGFILE
     echo "Finished processing parts"
+  fi
+
+  if [[ -f "$WORKINGDIR" ]]; then
+    rm ${WORKINGFILE}
   fi
 else
   echo "Skipped Kafka Consumer"

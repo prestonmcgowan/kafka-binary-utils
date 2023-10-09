@@ -22,6 +22,9 @@ elif [[ $DISTRO == *"Darwin"* ]]; then
   echo "MacOS Detected"
   B64_OPTS=" -b 0 -i"
   ## TODO: Check for mac md5sum. `brew install md5sha1sum`
+elif [[ $(cat /etc/redhat-release) == *"Red Hat"* ]]; then
+  echo "Red Hat Detected"
+  B64_OPTS=" -w 0"
 else
   echo "Other OS Detected"
   echo "Only MacOS & Ubuntu are supported at this time"
@@ -52,7 +55,7 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       ;;
     -f|--filepath)
-      FILEPATH="$2"
+      FILEPATH=$(realpath $2)
       shift # past argument
       shift # past value
       ;;
@@ -125,17 +128,22 @@ file_md5sum=($(md5sum ${FILEPATH}))
 numParts=$(ls ${FILE}_* | wc -l | xargs)
 f_json=$FILE.json
 for f in ${FILE}_*; do
-  #f_json=${f}.json
   echo -n "{" >> ${f_json}
   echo -n "\"filename\": \"${FILE}\"," >> ${f_json}
   echo -n "\"file_md5sum\": \"${file_md5sum}\"," >> ${f_json}
   echo -n "\"file_parts\": ${numParts}," >> ${f_json}
   echo -n "\"partname\": \"${f}\"," >> ${f_json}
   echo -n "\"part_base64_contents\": \"" >> ${f_json}
-  base64 $B64_OPTS ${f} | tr -d '\n' >> ${f_json}
+  base64 $B64_OPTS ${f} | sed "s/*[ \w]$//" >> ${f_json}
   echo -n "\"" >> ${f_json}
   echo -n "}" >> ${f_json}
   echo >> ${f_json}
+
+  if [[ $DRYRUN == "TRUE" ]]; then
+    f_b64=$f.b64
+    base64 $B64_OPTS ${f} | sed "s/*[ \w]$//" > "${f}.b64"
+    md5sum "${f}.b64" > "${f}.b64.md5"
+  fi
 done
 
 if [[ $DRYRUN == "TRUE" ]]; then
