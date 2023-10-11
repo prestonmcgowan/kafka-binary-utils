@@ -17,6 +17,10 @@ function loadPartFile {
 
   while read -r line
   do
+    # Progress dot
+    echo -n "."
+
+
     csv=$(echo $line | sed -e 's/{//;s/\}//;s/\"//g')
     IFS=',' read -r -a array <<< "$csv"
 
@@ -55,34 +59,39 @@ function loadPartFile {
       esac
     done
     
-    echo "------------------------------------"
-    echo "Processing  : ${fileToProcess}"
-    echo "filename    : ${filename}" 
-    echo "file_md5sum : ${file_md5sum}"
-    echo "file_parts  : ${numParts}"
-    echo "partname    : ${partFilename}"
-    echo "part_md5sum : ${part_md5sum}"
-    echo "part_num    : ${part_num}"
-    echo "part_base64_contents Length: ${#part_base64_contents}"
-    echo "------------------------------------"
+    # echo "------------------------------------"
+    # echo "Processing  : ${fileToProcess}"
+    # echo "filename    : ${filename}" 
+    # echo "file_md5sum : ${file_md5sum}"
+    # echo "file_parts  : ${numParts}"
+    # echo "partname    : ${partFilename}"
+    # echo "part_md5sum : ${part_md5sum}"
+    # echo "part_num    : ${part_num}"
+    # echo "part_base64_contents Length: ${#part_base64_contents}"
+    # echo "------------------------------------"
 
     # Write Metadata doc so we can check for file parts over multiple executions
     metadataFilename="${WORKINGDIR}/metadata_${file_md5sum}"
-    echo "MetadataFilename: ${metadataFilename}"
+    # echo "MetadataFilename: ${metadataFilename}"
     if [[ ! -f "${metadataFilename}" ]]; then
       echo "${filename},${file_md5sum},${numParts}" > ${metadataFilename}
     fi
-    partMetadataFilename="${WORKINGDIR}/part_${part_num}_metadata_${file_md5sum}"
-    echo "PartMetadataFilename: ${partMetadataFilename}"
-    if [[ ! -f "${partMetadataFilename}" ]]; then
-      # The formatting here with MD5SUM_2Spaces_Filename is to match the output of md5sum
-      echo "${part_md5sum}  ${partFilename}" > ${partMetadataFilename}
-    fi
+
+    ## Useful for Debug
+    # partMetadataFilename="${WORKINGDIR}/part_${part_num}_metadata_${file_md5sum}"
+    # # echo "PartMetadataFilename: ${partMetadataFilename}"
+    # if [[ ! -f "${partMetadataFilename}" ]]; then
+    #   # The formatting here with MD5SUM_2Spaces_Filename is to match the output of md5sum
+    #   echo "${part_md5sum}  ${partFilename}" > ${partMetadataFilename}
+    # fi
 
     # Write out this parts data
     echo "${part_base64_contents}" > ${WORKINGDIR}/${partFilename}
 
   done < ${fileToProcess}
+
+  # end progress dots
+  echo 
 }
 
 # Do ENV check for proper base64 options
@@ -256,18 +265,21 @@ else
   echo "Skipped Kafka Consumer"
 fi
 
+## TODO: Add Debug state for `loadPartFile` to run against a user's file.
+## this is helpful when using the --debug --skip-consumer options.
+
 if [[ $SKIP_PROCESSING != "TRUE" ]]; then
   echo "Build completed binary from parts"
   for md in ${WORKINGDIR}/metadata_*; 
   do
-    echo "Metadata: $md"
+    # echo "Metadata: $md"
     metadata=$(cat $md)
     filename=$(echo $metadata | cut -f1 -d,)
     file_md5sum=$(echo $metadata | cut -f2 -d,)
     numParts=$(echo $metadata | cut -f3 -d,)
-    echo "filename: ${filename}" 
-    echo "file_md5sum: ${file_md5sum}"
-    echo "file_parts:  ${numParts}"
+    # echo "filename: ${filename}" 
+    # echo "file_md5sum: ${file_md5sum}"
+    # echo "file_parts:  ${numParts}"
 
     partsFound=$(ls ${WORKINGDIR}/${filename}_* | wc -l)
     echo "Found ${partsFound} of ${numParts} for ${filename}"
@@ -280,10 +292,12 @@ if [[ $SKIP_PROCESSING != "TRUE" ]]; then
       fi
 
       for encoded in ${WORKINGDIR}/${filename}_*; do
-        echo "Processing: ${encoded}"
+        # echo "Processing: ${encoded}"
+        echo -n "."
         base64 $B64_OPTS ${encoded} >> ${DECODED}
       done
-      
+      echo
+
       binSum=($(md5sum ${DECODED}))
       if [[ ${binSum} == ${file_md5sum} ]]; then
         echo "MD5Sum match for ${filename}"
