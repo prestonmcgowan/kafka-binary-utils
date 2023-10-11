@@ -160,3 +160,45 @@ kafka-binary-consumer.sh --bootstrap-server fqdn:9095 --topic binary_in_parts \
 * `base64`
 * `bash`
 * Basic Linux commands
+
+## Testing
+
+Test have been performed with multiple file sizes up to 1 Gigabyte
+
+Here are some commands to generate large files of random bits.
+
+| About XX bytes | CLI Command                                                      |
+| -------------- | ---------------------------------------------------------------- |
+| ~1M            | `openssl rand -out random.1m   -base64 $(( 2**20 * 3/4 ))`       |
+| ~10M           | `openssl rand -out random.10m  -base64 $(( 2**20 * 3/4 * 10))`   |
+| ~250M          | `openssl rand -out random.250m -base64 $(( 2**20 * 3/4 * 246))`  |
+| ~520M          | `openssl rand -out random.520m -base64 $(( 2**29 * 3/4 ))`       |
+| ~768M          | `openssl rand -out random.768m -base64 $(( 2**20 * 3/4 * 756 ))` |
+| ~1G            | `openssl rand -out random.1g   -base64 $(( 2**30 * 3/4 ))`       |
+
+### Test Publish 768M file locally to Kafka single dev node
+
+Test:
+```
+date; ./kafka-binary-producer.sh --bootstrap-server localhost:9095 --topic binary_in_parts --filepath ~/largeData/random.768m ; date
+```
+
+Result:
+```
+Wed Oct 11 00:28:13 GMT 2023
+Red Hat Detected
+Bootstrap Server  = localhost:9095
+Producer Config   =
+Topic             = binary_in_parts
+Filepath          = /var/lib/kafka/developerLargeData/random.768m
+Dry Run           = FALSE
+ ----------= Environmental =----------
+base64 options    =  -w 0
+Temp Directory    = /tmp/tmp.BJgPMETCPV
+Start processing: random.768m
+Producing: random.768m.json
+Deleted temp working directory /tmp/tmp.BJgPMETCPV
+Wed Oct 11 00:29:09 GMT 2023
+```
+
+The test took about 56 seconds to break up and publish the 768M random data file.  
